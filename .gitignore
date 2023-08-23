@@ -1,0 +1,12 @@
+.aws/
+.bash_history
+.cache/
+.config/
+.connections-store.json
+.data_wrangler/
+.ipynb_checkpoints/
+.ipython/
+.jupyter/        
+.local/
+.sagemaker-jumpstart-tasks-status.json 
+.yarnrc

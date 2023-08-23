@@ -1,0 +1,486 @@
+{
+  "metadata": {
+    "version": 1,
+    "disable_limits": false,
+    "instance_type": "ml.m5.4xlarge",
+    "disable_validation": true
+  },
+  "parameters": [],
+  "nodes": [
+    {
+      "node_id": "c4f73be2-7ab3-47ae-ac0d-495dc2192127",
+      "type": "SOURCE",
+      "operator": "sagemaker.s3_source_0.1",
+      "parameters": {
+        "dataset_definition": {
+          "__typename": "S3CreateDatasetDefinitionOutput",
+          "datasetSourceType": "S3",
+          "name": "titanic.csv",
+          "description": null,
+          "s3ExecutionContext": {
+            "__typename": "S3ExecutionContext",
+            "s3Uri": "s3://data-wrangler-s3-bucket/titanic.csv",
+            "s3ContentType": "csv",
+            "s3HasHeader": true,
+            "s3FieldDelimiter": ",",
+            "s3CsvEncodingType": "utf-8",
+            "s3DirIncludesNested": false,
+            "s3AddsFilenameColumn": false,
+            "s3RoleArn": null
+          }
+        }
+      },
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "default",
+          "sampling": {
+            "sampling_method": "sample_by_limit",
+            "limit_rows": 50000
+          }
+        }
+      ]
+    },
+    {
+      "node_id": "88d1bd04-a7b5-4f6c-9b8d-12e147541cb0",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.infer_and_cast_type_0.1",
+      "parameters": {},
+      "trained_parameters": {
+        "schema": {
+          "PassengerId": "long",
+          "Survived": "long",
+          "Pclass": "long",
+          "Name": "string",
+          "Sex": "string",
+          "Age": "long",
+          "SibSp": "long",
+          "Parch": "long",
+          "Ticket": "string",
+          "Fare": "float",
+          "Cabin": "string",
+          "Embarked": "string"
+        }
+      },
+      "inputs": [
+        {
+          "name": "default",
+          "node_id": "c4f73be2-7ab3-47ae-ac0d-495dc2192127",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "f3aeaf2e-319e-4ffa-a96a-89b20123a697",
+      "type": "VISUALIZATION",
+      "operator": "sagemaker.visualizations.feature_correlation_0.1",
+      "parameters": {
+        "name": "Feature_Matrix",
+        "correlation_type": "linear"
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "88d1bd04-a7b5-4f6c-9b8d-12e147541cb0",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "2121771a-6f61-4ae8-b9a5-dd6b67233b98",
+      "type": "VISUALIZATION",
+      "operator": "sagemaker.visualizations.duplicate_rows_0.1",
+      "parameters": {
+        "name": "Check-duplicate"
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "88d1bd04-a7b5-4f6c-9b8d-12e147541cb0",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "ca9b1698-dde4-4d63-ac62-fe60e3af8dd9",
+      "type": "VISUALIZATION",
+      "operator": "sagemaker.visualizations.bias_report_0.1",
+      "parameters": {
+        "name": "bias-report-for-titanic",
+        "is_label_value_or_threshold": "value",
+        "is_facet_value_or_threshold": "value",
+        "default_metrics": {
+          "CI": true,
+          "DPL": true,
+          "JS": true,
+          "CDDL": false
+        },
+        "show_additional_metrics": "no",
+        "facet_values": "female",
+        "label_name": "Survived",
+        "label_values": "0",
+        "facet_name": "Sex"
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "88d1bd04-a7b5-4f6c-9b8d-12e147541cb0",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "7790bc36-a71c-4bc8-b1f2-896b3996baae",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.encode_categorical_0.1",
+      "parameters": {
+        "operator": "One-hot encode",
+        "one_hot_encode_parameters": {
+          "input_column": [
+            "Sex"
+          ],
+          "invalid_handling_strategy": "Keep",
+          "drop_last": false,
+          "output_style": "Columns"
+        },
+        "ordinal_encode_parameters": {
+          "invalid_handling_strategy": "Replace with NaN"
+        }
+      },
+      "trained_parameters": {
+        "one_hot_encode_parameters": {
+          "_hash": "4623886b68927a4dcb437c2769f9d5234824476a",
+          "string_indexer_model": "P)h>@6aWAK2mk|M5LfBH*(=`w003bD000vJ003=ebYWy+bYU-WVRCdWFfcGMFm;d1Zo)7SMfd%TSqCcyg%q~!h6SP$RkzW|o<M|OjO_}F^6zz1scMnBy*l^YnHwmBF~S-=9|Q(eM-nk0pM*7{Crp`1>=O^}uyL9$#9Ob)Km}>A6cgG2Yq?y_<zqXqm$H@>O#L_FICxjg3$YM#hW5kF>e9=DF5w?#r&hXcnzoU3jRh%vv|B9Z8ywMTLmT&wW-6YDLP2~^A*UyAN|eZkPWi8+2KSTh=>lT~ntIG8z5G(fX?w?-`1Km7uszc`lT+7cimGVtM~T_<-Rl1zblo=x<M{9iP)h>@6aWAK2mk|M5Lfm?ueuHZ000aC000;O003=ebYWy+bYU+paA9(EEif=JFfcA-a$`#_N@ieSU}Dg|x&I{qP)h>@6aWAK2mk|M5LYF_{g}A{006H7002k;003lRbYU-WVRCdWFfcGMFfB1MFkvz>VPY*bF*P$SG&eV8EjTtbH!WjhG&wmnFk)k3Ghr=bFfcGKb8ca9aCt6pVRCVGWps^_&uZI15XQ%{q6q3sAuCp(gS%jpfV0Gs<$vUm^wgG6Lg}GUN?BQ}RCKj=BsnDn-*d==<Slya+w>VavgIVDE%dZA^L?|kzui4Qeb*;IUXl}X`}6x<(<3IP7O?<ccufFk+F&+z%|qC+2boY31xRESxz7!kT6Ij#Y9WT}0JxrG6O932u3oi@g~-2tE@ofQN(=}M`b>#Ps^T=y#WgXAb#{#A(4?kHi*jSxl}ct(mw%H<tMh2+z?p}#W4NB{b#0Hd+zwdoho>{vjoXIb5@I-}vv73RJ|4pU8e+?Y9C#JTfScbp$ewdWd_b?!wH>{Om_178`2`mXfoOb9$**Kyq;pMo0v_-_(1Sl5#iimHTrOqF^Z7TP$x_6k6!b^qhLzU~$)>C*^X05$J(i?W#RZ#wykS~omGp!P^^O0bPt@fa?)`tL)vQ!sV0kvzrAT%0cBvGb;tAyHA4QFch?LwEdTfh;vsSB5E1+*`z{4zW*EiDc^S;mh_I|WXRootrhm#{21;HQ+lOul=%={=A#p8H19EIT|2`7Un@dx37>s7D&8Xw^tzv?egO9KQH0000800UqUSE+jgjuHR>01yBG08Ib@0AyiwVJ|LlVRCdWFfcGMFfB1MFkvz>VPY*bF*P$SG&eV8EjTtbH!WjhG&wmnFk)k3Ghr=bFfcGKb8ca9aCt6pVRCVGWpplMa$`#_N@ieSU}Bh;z2kWO#4CXSP)h*<6ay3h000O817HwW>A%@4-v9srVF3UD6951J0000000000q=5hc003=ebYWy+bYU-WVRCdWFfcGMFi=YY0u%!j0000800UqUSN21%x()yU01N;C02lxO00000000000HlEs0RRAPWprU=VRT_HE^uLTbS*G2FfcGKV{&6qO928D0~7!N00;mBU=UX&!u^=J0RRB60ssI=00000000000001_fm8ti0AyiwVJ~oDa&#>)FfcGMEip1MVKOpdVl6Z=H8U+VH#cQ1I5splEn{OeIXN{jVq;=6VJ%}YFfcB2Zeeh6c`k5aa&dKKbWlqH0u%!j0000800UqUSE+jgjuHR>01yBG08Ib@00000000000HlF)0{{SIVRT_HE^uLTbS*G2FfcGJF)}b=GBROeEi^GTGc7bXH)Sn2HZ(UaV`DTqIW;h1V`4L5En_e+FfMa$VQ_GHE^uLTadl;ME@N_IP)h{{000001ONm8cmV(a@B;t<000",
+          "one_hot_encoder_model": "P)h>@6aWAK2mk|M5Ld?vg4oso003zL000vJ003=ebYWy+bYU-WVRCdWFfcGMFm;c+P6IIzMSDJD>crXy3dyzz2_zz@XswAoo2>9l_Lzcb|D8z?j}&R9xVq<D%@K^lQec3X_X-o51F4cQzbo(5NXRvldI|Ix`5~BSDR1RCSO8C+3ZqXjw5v_muJ5{L)!(icaOU4AmnjA@_o`Rz68&dbHp11(N_e5vJ8U-N*mpaFRw}}y-=dh0Fojh4K00BTe9|VK#t#^*qo?qJ?yRGnW0pKt{;lhuzCO*`9MdxvhG9fkXqJRVtd3v*ja}3J!JI2y&RqXQ>+c@S^UW7fO9KQH0000800UqUSKMsz3l0DP01N;C02lxO0BvP-VPs)+VJ|LlVRCdWFfcGMFfL<qV@obdW?*1oVz|-7bsPXtO9KQH0000800UqUSH|dM(53+Z08Ih_07w7;0AyiwVJ~oDa&#>)FfcGMEj2b{Gcjf~I4w6gFgGnUFfd^)IAS(rEi_>>V_{-pWMeTkW-VhdFfcB2Zeeh6c`k5aa&dKKbY)WAYTGavRkSS4#d=Ywgbcn2f`%3{(b#eGLoe35G0F&C?zS;xTkgzcJC&4{wB!Z$1bcv9^{UUa2kCXc#c63721)1p&e3;{@bu)YPY~gxOa9*9-fj5=18k8NLOUNYLg)>Au;TUR?O=~J*Qa_T*rNb^+9oqv<I|7t>|B~(KWy?-6_Q{SVYZz}r_L+0{E}ZQ3o}}$$3Tyotf_PBfJE>fVp~e9LX{3t?D?MGZG#<e54F6}>kHPRCo;hl(<z;G+sC!3dZlRp1p<$d3#LHhcZ2NGZ$uza;clDGcA?#4tTN|9&L!9u>jdIb8JkxndmD;S^btGwk6|ygfWyT?Ibo_RQ79)<=_LEpxZ!R&SA4>)GmFIW9?x>6Q_Ck`Z+Iz-f2~)cfKe-+mC_iwgz_fntghxIh?IePQk72TrTx6nnolyRty=YX2}s5os4!Ud_>(8Nc(wYzLhRGV@%zGbHW530(GNt>*^d{wPCKK~(fClsVK|7R>@XOHNf3v_bd(N{hEX)mqVXWkf<biP`98euLj$2H{78>bO9KQH0000800UqUSB780uMz+N01yBG08Ib@0AyiwVJ|LlVRCdWFfcGMFfBDUV>2;kG&n6cI50OYG%zq>EjVH}WGysdGh<<5VPs=5HD)biFfcGKb8ca9aCt6pVRCVGWpplMa$`#_N@ieSU}E46+jF-s<li;`P)h*<6ay3h000O817HwW#|nbj)&KwiX#oHL6951J0000000000q=5hc003=ebYWy+bYU-WVRCdWFfcGMFi=YY0u%!j0000800UqUSKMsz3l0DP01N;C02lxO00000000000HlEj0RRAPWprU=VRT_HE^uLTbS*G2FfcGKV{&6qO928D0~7!N00;mBU=UZv=w#5Q0RR9^0ssI=00000000000001_flC1Z0AyiwVJ~oDa&#>)FfcGMEj2b{Gcjf~I4w6gFgGnUFfd^)IAS(rEi_>>V_{-pWMeTkW-VhdFfcB2Zeeh6c`k5aa&dKKbWlqH0u%!j0000800UqUSB780uMz+N01yBG08Ib@00000000000HlFe0{{SIVRT_HE^uLTbS*G2FfcGJH8x{2F=jM4EjKtYH!U<UFkvk?Vm4$gG+{GiVPauqV=*;mEn_e+FfMa$VQ_GHE^uLTadl;ME@N_IP)h{{000001ONm8cmV(a)B^wj000"
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "88d1bd04-a7b5-4f6c-9b8d-12e147541cb0",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "5b9c00e7-5071-4ac2-ab63-fb07efc709be",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.manage_columns_0.1",
+      "parameters": {
+        "operator": "Drop column",
+        "drop_column_parameters": {
+          "column_to_drop": [
+            "Cabin"
+          ]
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "7790bc36-a71c-4bc8-b1f2-896b3996baae",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "cf439a69-4def-4c91-a4c9-56662b33cceb",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.handle_missing_0.1",
+      "parameters": {
+        "operator": "Impute",
+        "impute_parameters": {
+          "column_type": "Numeric",
+          "numeric_parameters": {
+            "input_column": [
+              "Age"
+            ],
+            "strategy": "Mean",
+            "output_column": "New_Age"
+          }
+        }
+      },
+      "trained_parameters": {
+        "impute_parameters": {
+          "numeric_parameters": {
+            "_hash": "d29fe00b521fd95f47309815d6c584be9f22e239",
+            "impute_value": 29.622191011235955
+          }
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "5b9c00e7-5071-4ac2-ab63-fb07efc709be",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "889f5582-e4c9-48d1-aee4-4ebae5cc2c13",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.custom_code_0.1",
+      "parameters": {
+        "operator": "Python (Pandas)",
+        "pandas_parameters": {
+          "code": "# Table is available as variable `df`\ndf['New_Age'] = df['New_Age'].astype('int')"
+        },
+        "pyspark_parameters": {}
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "cf439a69-4def-4c91-a4c9-56662b33cceb",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "8d6ad269-3c18-4c82-92e2-52f1f63ed738",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.custom_code_0.1",
+      "parameters": {
+        "operator": "Python (Pandas)",
+        "pandas_parameters": {
+          "code": "# Table is available as variable `df`\ndf.info()"
+        },
+        "pyspark_parameters": {}
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "889f5582-e4c9-48d1-aee4-4ebae5cc2c13",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "8c4295f6-2fbf-43e3-9e2e-9d3cf4d4f630",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.manage_columns_0.1",
+      "parameters": {
+        "operator": "Drop column",
+        "drop_column_parameters": {
+          "column_to_drop": [
+            "Age",
+            "PassengerId",
+            "Name",
+            "Embarked",
+            "Ticket"
+          ]
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "8d6ad269-3c18-4c82-92e2-52f1f63ed738",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "8b0f1522-0c84-462d-981f-26b6cfdf47c8",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.process_numeric_0.1",
+      "parameters": {
+        "operator": "Scale values",
+        "scale_values_parameters": {
+          "scaler": "Standard scaler",
+          "standard_scaler_parameters": {
+            "input_column": [
+              "Fare"
+            ],
+            "scale": false,
+            "output_column": "Fare"
+          }
+        }
+      },
+      "trained_parameters": {
+        "scale_values_parameters": {
+          "standard_scaler_parameters": {
+            "_hash": "1d3c411751299d4459fb94902bdda076f49ba116",
+            "scaler_model": "P)h>@6aWAK2mq#H5LX&1e1^yX003M8000vJ003=ebYWy+bYU-WVRCdWFfcGMFpbVlYr`-MfZ_XohR&&JoRWTAdkzc&y&4fKt(hGgTV~Lb|2}7>rM-+@#j8iU!C)~ZIDn65fdPjLi4-t?31`Jf$T^be87GZV_XApro!4Zc0yd5kqYH4T+r6xJyUkX%QdaN_oG2#ar$RTP5%mh)by}^<UN*W6-%YiavPDgsW{XQx0CXJ|`Uc;IFCAf#Mzo14@R>vAqql`oOfIOwTeYk$Y0vsun&}xnI+!caG-9^=`QIad{HoMFd_B%F(>#Ct08mQ<1QY-O00;o4Vh~qcz@PFC0000C0000O0001OWprU=VRT_HE^uLTbS*G2FfcGKV{&6lE=p!#U|?cstI?7I08mQ<1QY-O00;o4Vh~p*H7$XY0{{RM3jhE}0001FVRT_HaA9(EEif=JFfc7KGht#mW-&1>Gh;GiEi^SaVJ%@ZH#jY3H83$YH8nRgG&M6VV=yo<E^}^SaBz7paA9(Bb!BwzR?TZ0M-(58)~m(&04JVdHyC3!wXlo3*plThgmFFyCKzFYTLMWbBkjmtx>_l_tF&rj$iXBzm|TMc$zPC!98BwTNDIw55D^IU)<YnNoPr6VZ&oX<EXBs;&|U&!_2$j*{oZ@Od9&>DsS6VXk$$3*KW;t#cxZrNSjt2}sP`+35Q@iQ@C4sca*Vv+eDF&fBB90ugxEeo2Fc4;H~)$?_hp2Rj0X%TLVZmP^82HI-b-yLvfPG>qvDN6XP?#=7yjd_?%sd4d35ipMsu6jPo7v<(E6~ZN+NmqN3cd=(HGNHa0N@;y@Vj8*;t#|4E}7+R#}l51`kk$oTDhPa%4WVHezHcH0v>PIW)I$3%Y|_*zI@=yDl}b!2RL);$g4C+@F5%3P17^BNEDBHSYN)XixAkQYF7u;lqPV505K-LCi2#CC~bm3t+->Osl{>5L#Z!!gfYdCEN0Rf*a8ZZu1g%d;ylPGP}A5wzmT-l{j<$#}X*k2DFW&0wbhlkgRAULX)5nf+?n_>A9qmZJcl8Nzq8#3S=f?7Gdh>lLYCfe@nzb$y^7YXd>X7qw~pJb_%!0Jri+vddMJ3ZitE3hLNl-inwOaLG8_&1D-{?1mF&$dV)~;Fd(V}QEx;P>e0<}kzNLDHk$3of<`~#ZO`{s<a^#j=23DBM;!-ex?936d_WD?6`;H=3k`R=D0iv2gFCvvCqjRdMfcnBmW)B<{yJ{QJD8pbrWXOzy42D!VA@y6btxNN=*SX6c6-|s{wWf^lR-$jEm53QXkF?DUB*<k?5-ND!r;;x!TmL^a@VuUj@pwp(#8Z*N4pT-725#gN|pPDTmIQ7ai5vYXX+c}nl6q-pVK|xtrmQJOfOp8Ha&gr(ly;-rN)*C{syjvubKi}u$c!~y(?wOHf+mb_Nwt6FZgBm+p{YGuhh<j0hQW*I4F2!ce;Jb3lPov^nA@1E2nDPEN_FS$ZU^~>CK*jb8T%b>J26+3bq`duX1-+JS5&bJRGBLd6?_68o0xWSn1?1lpUX0j+cWxVU24C&e|BcgC;f0RYCb#Ilo^!cva#ye3_FkbFvo#sprF&&^IM_D12)TO&Aj?BQ-RVuUfV_G&3_bJI?dz^khC$98XQB3#oj1+MF?`r=~NR*<xmPGG9zhW=6G*0favJL$Bf6aTz{`{{>J>0|XQR000O8reY9R;xs1~BLDyZAOHXWO#lD@WMOn+FD`Ila&#>)FfcGMEip4;VmW3pF)cG=GGi??H8^1{VKX;4EoL<^F*Y?dH#0OfGc98<FfcB2Zeeh6c`k5aa&dKKbS`6ZV@obdW?*1oV(`_w?I`GbR_#Mu7<WN%f!^dhp?)bE&;A1dP)h*<6ay3h000O8reY9R8Y+B-$N&HUTmb+86951J0000000000q=5hc003=ebYWy+bYU-WVRCdWFfcGMFi=YY0u%!j000080H$IPS6slK@(ut101N;C02lxO00000000000HlHW0001OWprU=VRT_HE^uLTbS*G2FfcGKV{&6qO928D0~7!N00;o4Vh~p*H7$XY0{{RM3jhE}00000000000001_fjt2L0AyiwVJ~oDa&#>)FfcGMEip4;VmW3pF)cG=GGi??H8^1{VKX;4EoL<^F*Y?dH#0OfGc98<FfcB2Zeeh6c`k5aa&dKKbWlqH0u%!j000080H$IPSK>4$79#)v03ZMW08Ib@00000000000HlF71pokKVRT_HE^uLTbS*G2FfcGJF*9LeIc702Ei+>>V=Xi_IAJYeGdDObW;HM|HZ?UjGc+|bEn_e+FfMa$VQ_GHE^uLTadl;ME@N_IP)h{{000001ONm8cmV(a#03BV000"
+          }
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "8c4295f6-2fbf-43e3-9e2e-9d3cf4d4f630",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "9a07fe4b-1bf2-4220-a478-b0dd9431c3c4",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.process_numeric_0.1",
+      "parameters": {
+        "operator": "Scale values",
+        "scale_values_parameters": {
+          "scaler": "Min-max scaler",
+          "min_max_scaler_parameters": {
+            "input_column": [
+              "New_Age"
+            ],
+            "min": 0,
+            "max": 1,
+            "output_column": "New_Age_Scaled"
+          },
+          "standard_scaler_parameters": {
+            "scale": true
+          }
+        }
+      },
+      "trained_parameters": {
+        "scale_values_parameters": {
+          "min_max_scaler_parameters": {
+            "_hash": "2b965c30e376781b891bc813817ed2fb34ca5ffb",
+            "scaler_model": "P)h>@6aWAK2msY$5Lb@zUG>2L002D!000vJ003=ebYWy+bYU-WVRCdWFfcGMFm;YiZ^AGPK=1qvpG(vaXiKj<SDG}5Yh+Rb(UK<0hlD`=?-<ag9oW@=@7Xs{24jQ)TsR5zsLmv!$M7wz5l6z51Bp@3BVN7~8VaME$Up%}TZ##-hoNeBb=CLVwyC?afTzBv5Ve~*+=xb0YqZySU9y+;#KXTusoJhnRX-i-dcy?kXh-Dm4J=-`FSx2_pVNmkEGM#FD);!pYCcgu_AaMiK>iT2gr$Iqj+jmQeA|6r`1e04Ul=UQ>JCs#0|XQR000O8)nX7=aHupV4gdfE3;+NC7ytkOZDn*}WMOn+FD`Ila&#>)FfcGME@N_IOD;-gU|?Wk_!|4M4**b00|XQR000O8)nX7=5;^&9hXVirZ3_SZNB{r;WMOn+FK}UUbS*G2FfcGJVmUTpIbvosEihs<Wi2!~H!&??G&L|SGi5a~W;ii3G%+$|En_e+FfMa$VQ_GHE^uLTadl;M?N&`|6G0fBOtzb~RiWA$cBPcE*w9K{+N5dP5{h4xBDEB$B3O}0vZ;%kO}e|OiBj+o)I;$i2zu}rs1&KvAE1Js1&b%IUOae`D&ov$lilW{76rW+!seZs=Xu_Do_Tl3-0`!+2%s(`qF1+{{^;mNkPdky0MLFI0sw-60DaQA{pbMt`ruK~hX{#52f>yPp&s=9!>u=g>N*d=z9B~ec&H;tLHD2E`_|z@p*bIlJu08ST-B#1&&q*cRW*N1>V%TWvE=R#f)b{K&VVG+DQ5^9hm<6^8aKVLM*c%hT9y~O<ZdjWDGZ!w7EQX*Y5>i+;bs6WxZygiLAPKHyAiBm%UlIZwZ9*n-fQKFdG)fDx}s(Y;y?_F9XV55)C{7Z(F}S92=)PyvrBokuV?1*L7~&(_Cb-ewCgG(gft_qrBsU=&d((1a*Pu>U9)TiE9{V}t69~s8JJ%tdZ7ijy$<VDLW=*e5)7qoX*Dd+j*?=47o>i_MNUBoVu(-Rsj!f!9DC)7LBDTA-AAlNX*1%r5bDAoIi!H_YztksDMxn#Pljg`qtMTP$@q8MP!9;NvR0S+0547Z`Bg8RJyrMO=uP7pN~#mw3?YmkJA#{3u)R^x^{Y|u0$!k;g!d|V5jCL6tUvE(miKKNngro>*vtu1-0tu?+@-~3fhynOnZ;YJl(%`j1?xO{$P`}i%#)2^6O&1CXOlOAb%JY5@SP)A=9-vHiaVNI<`UlB;6<Lv{#k$C*DUWBo|=p|I1IxA-sHNdS%adOGZz(-C-nVSoU1@tR!vLG8Dd*hi7LZD9B4pTOS(dXrGjcJX6~AjRc(?cHW9ak8!|g9c|x{qvyigoK{=zTdfJjFF5Zw0l4VQ2mZIwwe2rH~Gg3+?mgPX}QfGBVXWT{QyqdCe=DAbz6rL}gbP4&=PB>cl{PuJ^l<6R<^~uSS%|=E+*GW>RGZ~^=>Y!ZRJJnoS8LW|6UwLHBu+>G?+{UMgThraHYP5%#CMnTrw=?GJ^;0>+CYoW*(mZaBE4$8GX}#ShP3H<s^0#tcTG@S7zL(>FyZmpLRtO-TcJHL4S+m!@#CnI7;fNCH?N1goJ>5GtHab3}CZo}jWGpijiAPhBWHg>0OUFm!vDkPfHa?QfL`Gr*(rPyVO}`+%2Y@;HNBbvGO9KQH000080M%j;S89Q<Pa^;T03ZMW08Ib@0AyiwVJ|LlVRCdWFfcGMFfC#^HeoqpW;87@Vl-tfG&nagEnze@FfB7>H8Ey5F*7tVGG#4eFfcGKb8ca9aCt6pVRCVGWpplMa$`#_N@ieSU}E@Vd$>Z`car%0{Kx_!4%wG-d_vn&a#BtJ08mQ-0u%!j000080M%j;SB~*r^}zrD06hT!022TJ00000000000HlEc0001OWprU=VRT_HaA9(EEif=JFfdR{0Rj{Q6aWAK2msY$5La-hG$#%K000aC000;O0000000000005+c@&Et;ZDn*}WMOn+FD`Ila&#>)FfcGME@N_IP)h*<6ay3h000O8)nX7=5;^&9hXVirZ3_SZNB{r;0000000000q=7a8003lRbYU-WVRCdWFfcGMFfC#^HeoqpW;87@Vl-tfG&nagEnze@FfB7>H8Ey5F*7tVGG#4eFfcGKb8ca9aCt6pVRCVGWpq$W0Rj{Q6aWAK2msY$5Laq}uumfZ001BW002z@0000000000005+cBLx5eWMOn+FD`Ila&#>)FfcGMEn+z~VL4)EG%YY<G-WL`I5#mZVKg-`Ei+{`F=jY1Gc++WWi4YcFfcB2Zeeh6c`k5aa&dKKbS`6ZV^B*41^@s600aO80C)ia0I>xC0000"
+          }
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "8b0f1522-0c84-462d-981f-26b6cfdf47c8",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "199b6d5f-ade9-4d88-90ca-c8dca0305522",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.manage_columns_0.1",
+      "parameters": {
+        "operator": "Drop column",
+        "drop_column_parameters": {
+          "column_to_drop": [
+            "New_Age"
+          ]
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "9a07fe4b-1bf2-4220-a478-b0dd9431c3c4",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "80f18482-df98-4ba7-990d-16d01e2eacbf",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.manage_columns_0.1",
+      "parameters": {
+        "operator": "Drop column",
+        "drop_column_parameters": {
+          "column_to_drop": [
+            "Sex_male"
+          ]
+        }
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "199b6d5f-ade9-4d88-90ca-c8dca0305522",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "node_id": "a0874923-104e-4548-bb63-983da692ac12",
+      "type": "TRANSFORM",
+      "operator": "sagemaker.spark.manage_columns_0.1",
+      "parameters": {
+        "operator": "Rename column",
+        "rename_column_parameters": {
+          "input_column": "Sex_female",
+          "new_name": "Sex"
+        },
+        "drop_column_parameters": {}
+      },
+      "inputs": [
+        {
+          "name": "df",
+          "node_id": "80f18482-df98-4ba7-990d-16d01e2eacbf",
+          "output_name": "default"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "default"
+        }
+      ]
+    }
+  ]
+}
